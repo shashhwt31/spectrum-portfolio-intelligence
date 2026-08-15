@@ -18,6 +18,21 @@ export const providerMatrix = [
 ];
 
 export const sum = a => a.reduce((x,y)=>x+y,0);
+const csvCells = row => [...row.matchAll(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)].map(match => match[1].replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+export function parseHoldingsCsv(text, source='CSV import') {
+ const rows=text.trim().split(/\r?\n/).filter(Boolean).map(csvCells);
+ if (rows.length < 2) throw new Error('The file needs a header row and at least one holding.');
+ const headers=rows.shift().map(x=>x.toLowerCase().replace(/[^a-z]/g,''));
+ const lookup=(row,...names)=>{const i=headers.findIndex(h=>names.includes(h));return i<0?'':row[i]||''};
+ const number=value=>Number(String(value).replace(/[^0-9.-]/g,''));
+ const imported=rows.map((row,index)=>{
+   const name=lookup(row,'name','instrument','security','holding'), value=number(lookup(row,'value','marketvalue','currentvalue'));
+   if (!name || !Number.isFinite(value) || value<=0) return null;
+   return {id:`import-${Date.now()}-${index}`,name,symbol:lookup(row,'symbol','ticker','isin')||'—',type:lookup(row,'type','instrumenttype')||'Other',account:lookup(row,'account','broker','provider')||'Imported account',source,value,asset:lookup(row,'asset','assetclass')||'Equity',sector:lookup(row,'sector')||'Unclassified',geo:lookup(row,'geo','geography','country')||'India',issuer:lookup(row,'issuer','fundhouse')||name,fee:number(lookup(row,'fee','expenseratio'))||0,liquidity:lookup(row,'liquidity')||'Not assessed',overlap:{},updated:'Imported locally'};
+ }).filter(Boolean);
+ if (!imported.length) throw new Error('No valid holdings found. Include Name and Value columns.');
+ return imported;
+}
 export function analyze(items=holdings) {
  const total=sum(items.map(h=>h.value));
  const group=(key)=>Object.entries(items.reduce((a,h)=>{a[h[key]]=(a[h[key]]||0)+h.value;return a},{})).map(([name,value])=>({name,value,pct:value/total*100})).sort((a,b)=>b.value-a.value);
@@ -43,4 +58,18 @@ export function analyze(items=holdings) {
 export function scenario(items, amount, targetId) {
  const candidate={id:'new',name:targetId==='intl'?'Global Equity ETF':targetId==='bond'?'Short Duration Bond ETF':'Gold ETF',symbol:'SIM',type:'ETF',account:'Scenario',source:'Simulation',value:amount,asset:targetId==='intl'?'Equity':targetId==='bond'?'Debt':'Gold',sector:targetId==='intl'?'Global technology & broad market':targetId==='bond'?'Government / PSU':'Commodity',geo:targetId==='intl'?'International':'India',issuer:'Illustrative',fee:targetId==='intl'?.48:.18,liquidity:'Medium',overlap:targetId==='intl'?{MSFT:6,GOOGL:5}:targetId==='bond'?{PSU:30}:{GOLD:100}};
  return analyze([...items,candidate]);
+}
+
+export function generateRebalancePlan(items, targets={Equity:65,Debt:25,Gold:10}, mode='contributions') {
+ const analysis=analyze(items), total=analysis.total;
+ const current=Object.fromEntries(analysis.asset.map(item=>[item.name,item.value]));
+ const targetRows=Object.entries(targets).map(([asset,pct])=>({asset,pct,targetValue:total*pct/100,currentValue:current[asset]||0,gap:total*pct/100-(current[asset]||0)}));
+ const underweight=targetRows.filter(row=>row.gap>0);
+ const requiredContribution=underweight.reduce((sum,row)=>sum+row.gap,0);
+ const actions=targetRows.map(row=>({
+   ...row,
+   action:mode==='contributions'?(row.gap>0?`Direct new contributions to ${row.asset}`:'Pause new contributions to this asset class'):(row.gap>0?`Consider adding ${row.asset}`:`Consider reducing ${row.asset}`),
+   amount:mode==='contributions'?(requiredContribution?row.gap/requiredContribution*Math.min(requiredContribution,total*.1):0):Math.abs(row.gap)
+ }));
+ return {mode,targets,total,current,requiredContribution,actions,assumptions:['Uses illustrative target weights only.','Excludes taxes, exit loads, transaction costs, price movements, lock-ins, and suitability review.','Does not create or execute trades.']};
 }

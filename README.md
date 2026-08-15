@@ -8,7 +8,7 @@
 ## Highlights
 
 - Explainable **0–100 Portfolio Health Score** with component weights and confidence cues
-- Unified holdings view across manual, CSV, and statement-import data sources
+- Unified holdings view across manual and local CSV imports, with source-labelled demo statement workflows
 - Concentration, asset allocation, sector, geography, fund-overlap, fee, liquidity, and fixed-income diagnostics
 - Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
 - Interactive what-if simulator for illustrative contribution scenarios
@@ -33,7 +33,7 @@ Then visit [http://localhost:4173](http://localhost:4173).
 
 ## Tech stack
 
-Vanilla HTML, CSS, and modern ES modules with Node’s built-in test runner. The application is intentionally dependency-light so the scoring logic remains easy to inspect.
+Vanilla HTML, CSS, and modern ES modules on the client; a zero-dependency Node HTTP API with local development persistence on the server; and Node’s built-in test runner. This keeps the scoring logic inspectable while creating a clean API boundary for a future database and provider-adapter service.
 
 ## Architecture
 
@@ -41,18 +41,17 @@ Vanilla HTML, CSS, and modern ES modules with Node’s built-in test runner. The
 Browser UI (index.html + app.js)
         │
         ▼
-Deterministic analytics (analytics.js)
+Local Node API (server.mjs)
         │
-        ├── Normalized holding model
-        ├── Provider/source metadata
-        ├── Health-score components
-        └── What-if simulation
+        ├── Local development portfolio store
+        ├── Audit-event trail
+        └── Deterministic analytics (analytics.js)
 ```
 
 | Area | Current implementation | Production direction |
 | --- | --- | --- |
-| Holdings | Normalized demo records | Server-side canonical data model and database migrations |
-| Imports | Clear UI flow / demo source metadata | Reconciled, provider-specific CSV/PDF import parsers |
+| Holdings | API-backed local development store + normalized demo records | PostgreSQL canonical model and database migrations |
+| Imports | Local CSV parsing, manual entry, browser-local persistence | Reconciled, provider-specific CSV/PDF import parsers |
 | Analytics | Deterministic client-side functions | Versioned service with source-data snapshots |
 | Connections | Intentionally not connected | Approved OAuth/token adapters only, encrypted at rest |
 | Recommendations | Explainable illustrative ideas | Compliance-reviewed portfolio-fit engine |
@@ -101,6 +100,10 @@ Current coverage verifies score bounds, allocation arithmetic, and scenario tota
 .
 ├── analytics.js                 # transparent scoring and simulation logic
 ├── app.js                       # UI behavior
+├── server.mjs                   # local API and development persistence
+├── domain/                      # transaction reconstruction and deduplication rules
+├── providers/                   # approved-integration adapter contracts
+├── db/migrations/               # PostgreSQL production-target schema
 ├── index.html / style.css        # responsive product interface
 ├── tests/                        # Node built-in test runner tests
 ├── docs/                         # architecture and provider boundaries

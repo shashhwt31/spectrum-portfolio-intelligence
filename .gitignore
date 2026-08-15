@@ -16,3 +16,6 @@ npm-debug.log*
 # Test and build output
 coverage/
 dist/
+
+# Local development portfolio data (may contain personal financial data)
+data/portfolio.json

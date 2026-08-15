@@ -1,4 +1,6 @@
-import test from 'node:test'; import assert from 'node:assert/strict'; import {holdings,analyze,scenario} from '../analytics.js';
+import test from 'node:test'; import assert from 'node:assert/strict'; import {holdings,analyze,generateRebalancePlan,parseHoldingsCsv,scenario} from '../analytics.js';
 test('analytics totals holdings and returns an explainable bounded score',()=>{const r=analyze();assert.equal(r.total,1040100);assert.ok(r.score>=0&&r.score<=100);assert.equal(r.components.length,10)});
 test('scenario changes total by proposed contribution',()=>{const before=analyze(), after=scenario(holdings,25000,'intl');assert.equal(after.total,before.total+25000)});
 test('asset allocations sum to 100',()=>{const total=analyze().asset.reduce((s,x)=>s+x.pct,0);assert.ok(Math.abs(total-100)<.00001)});
+test('CSV holdings map into normalized records',()=>{const imported=parseHoldingsCsv('Name,Value,Asset,Account\nExample Fund,"12,500",Debt,My Broker');assert.equal(imported.length,1);assert.equal(imported[0].value,12500);assert.equal(imported[0].asset,'Debt')});
+test('contributions-only rebalance avoids sell actions',()=>{const plan=generateRebalancePlan(holdings,{Equity:60,Debt:30,Gold:10},'contributions');assert.ok(plan.actions.every(action=>!action.action.includes('reducing')));assert.ok(plan.requiredContribution>=0)});

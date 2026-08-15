@@ -2,7 +2,9 @@
 
 ## Current prototype
 
-The browser renders a normalized set of holding records. Each record has an instrument identity, account attribution, source type, timestamp, asset/sector/geographic classifications, fee, liquidity marker, and a simplified look-through exposure map. `analytics.js` derives the portfolio total, allocation groups, concentration, estimated overlap, weighted fee, ten component scores, and contribution scenarios.
+The browser renders a normalized set of holding records. Each record has an instrument identity, account attribution, source type, timestamp, asset/sector/geographic classifications, fee, liquidity marker, and a simplified look-through exposure map. Users can add holdings manually or import a simple local CSV requiring `Name` and `Value` columns. The UI calls the local Node API when it is running and uses browser-local storage only as an offline fallback. `analytics.js` derives the portfolio total, allocation groups, concentration, estimated overlap, weighted fee, ten component scores, and contribution scenarios.
+
+`server.mjs` exposes `GET /api/portfolio`, `POST /api/holdings`, `POST /api/imports`, and `DELETE /api/holdings/:id`. It writes a local development store to `data/portfolio.json`, which is intentionally ignored by Git because it may contain personal financial information. The server has no authentication and must only be used locally as a development foundation.
 
 The UI never derives an unsupported real-time number. It labels the portfolio as demo data and identifies the source/freshness of every account row.
 
@@ -23,6 +25,8 @@ PortfolioAnalyticsService
 ```
 
 An adapter must retain source-account attribution. Instruments may be matched by ISIN, exchange symbol, scheme code, or a controlled match-confidence process. Positions must never be merged solely because their instruments match: equivalent securities at different brokers are legitimate separate positions.
+
+The repository now includes a PostgreSQL target migration at `db/migrations/001_initial_schema.sql`, provider-adapter contracts at `providers/base-adapter.js`, and deterministic reconstruction/deduplication helpers at `domain/portfolio.js`. The schema is not connected to the development server yet; it is a versioned implementation target for the next infrastructure phase.
 
 ## Health-score assumptions in this prototype
 

@@ -1,0 +1,18 @@
+# Dependencies and package-manager output
+node_modules/
+npm-debug.log*
+
+# Local configuration and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS / editor noise
+.DS_Store
+.vscode/
+.idea/
+
+# Test and build output
+coverage/
+dist/

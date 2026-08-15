@@ -12,6 +12,7 @@
 - Concentration, asset allocation, sector, geography, fund-overlap, fee, liquidity, and fixed-income diagnostics
 - Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
 - Interactive what-if simulator for illustrative contribution scenarios
+- Investor-context form that adjusts transparent analytical target allocations
 - Responsive, accessibility-conscious fintech UI with source freshness and provenance visible throughout
 - Explicit provider status and a strict no-scraping/no-passwords/no-OTP policy
 

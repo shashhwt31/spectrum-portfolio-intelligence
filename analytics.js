@@ -18,6 +18,8 @@ export const providerMatrix = [
 ];
 
 export const sum = a => a.reduce((x,y)=>x+y,0);
+export const allocationTargets={conservative:{Equity:40,Debt:50,Gold:10},moderate:{Equity:65,Debt:25,Gold:10},growth:{Equity:80,Debt:10,Gold:10}};
+export const targetForProfile=profile=>allocationTargets[profile?.riskProfile]||allocationTargets.moderate;
 const csvCells = row => [...row.matchAll(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)].map(match => match[1].replace(/^"|"$/g,'').replace(/""/g,'"').trim());
 export function parseHoldingsCsv(text, source='CSV import') {
  const rows=text.trim().split(/\r?\n/).filter(Boolean).map(csvCells);
@@ -33,7 +35,7 @@ export function parseHoldingsCsv(text, source='CSV import') {
  if (!imported.length) throw new Error('No valid holdings found. Include Name and Value columns.');
  return imported;
 }
-export function analyze(items=holdings) {
+export function analyze(items=holdings, targets=allocationTargets.moderate) {
  const total=sum(items.map(h=>h.value));
  const group=(key)=>Object.entries(items.reduce((a,h)=>{a[h[key]]=(a[h[key]]||0)+h.value;return a},{})).map(([name,value])=>({name,value,pct:value/total*100})).sort((a,b)=>b.value-a.value);
  const asset=group('asset'), sector=group('sector'), geo=group('geo'), issuer=group('issuer');
@@ -43,7 +45,7 @@ export function analyze(items=holdings) {
  const overlap=Math.min(100, overlapDirect/total*100);
  const weightedFee=sum(items.map(h=>h.value*h.fee))/total;
  const concentration=Math.max(0,100-top*1.55);
- const allocation=Math.max(45,100-(Math.abs(equity-65)+Math.abs(debt-25)+Math.abs(gold-10))*.9);
+ const allocation=Math.max(45,100-(Math.abs(equity-(targets.Equity||0))+Math.abs(debt-(targets.Debt||0))+Math.abs(gold-(targets.Gold||0)))*.9);
  const diversification=Math.min(96, 55+items.length*4+(asset.length-1)*5);
  const sectorScore=Math.max(40,100-(sector[0]?.pct||0)*.7);
  const geoScore=geo.length>1 ? 76 : 48;
@@ -72,4 +74,12 @@ export function generateRebalancePlan(items, targets={Equity:65,Debt:25,Gold:10}
    amount:mode==='contributions'?(requiredContribution?row.gap/requiredContribution*Math.min(requiredContribution,total*.1):0):Math.abs(row.gap)
  }));
  return {mode,targets,total,current,requiredContribution,actions,assumptions:['Uses illustrative target weights only.','Excludes taxes, exit loads, transaction costs, price movements, lock-ins, and suitability review.','Does not create or execute trades.']};
+}
+
+export function lookThroughSummary(items=holdings) {
+ const funds=items.filter(item=>['ETF','Mutual fund','Bond ETF','Index fund'].includes(item.type));
+ const full=funds.filter(item=>Object.keys(item.overlap||{}).length>0).length;
+ const direct=items.filter(item=>item.type==='Stock');
+ const shared=direct.map(item=>({name:item.name,estimatedFundExposure:funds.reduce((sum,fund)=>sum+(fund.overlap?.[item.symbol.replace('HDFCBANK','HDFC')]||0)*fund.value/100,0)})).filter(item=>item.estimatedFundExposure>0).sort((a,b)=>b.estimatedFundExposure-a.estimatedFundExposure);
+ return {fundCount:funds.length,full,partial:Math.max(0,funds.length-full),quality:funds.length===full?'Full look-through data available':full?'Partial holdings disclosure / proxy exposure':'Unable to calculate reliably',shared};
 }

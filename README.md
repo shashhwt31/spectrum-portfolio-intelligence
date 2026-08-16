@@ -1,131 +1,105 @@
-# Spectrum — Portfolio Health & Diversification Intelligence
+# Spectrum — Portfolio Intelligence Platform
 
-**A transparent portfolio-analytics experience for Indian investors.** Spectrum consolidates source-labelled holdings, diagnoses diversification quality, estimates fund overlap, and lets users test allocation changes before acting.
+**An explainable portfolio-health and diversification analytics platform for Indian investors.**
+
+Spectrum brings portfolio holdings into a unified view and analyzes **asset allocation, concentration, diversification, risk alignment, sector and geographic exposure, fund overlap, portfolio fit, and rebalancing opportunities**.
+
+The platform is designed around transparent, deterministic analytics so that users can understand *why* a portfolio receives a particular assessment instead of relying on an opaque AI score.
 
 > [!IMPORTANT]
-> This repository is a front-end product prototype with deterministic demo analytics. It does not connect to brokers, provide financial advice, use live market data, or place trades.
+> Spectrum is currently a functional portfolio-analytics prototype using local/demo data. It does not connect to live broker accounts, execute trades, use live market data, or request/store passwords, OTPs, TPINs, or trading credentials.
 
-## Highlights
+---
 
-- Explainable **0–100 Portfolio Health Score** with component weights and confidence cues
-- Unified holdings view across manual and local CSV imports, with source-labelled demo statement workflows
-- Concentration, asset allocation, sector, geography, fund-overlap, fee, liquidity, and fixed-income diagnostics
-- Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
-- Interactive what-if simulator for illustrative contribution scenarios
-- Investor-context form that adjusts transparent analytical target allocations
-- Responsive, accessibility-conscious fintech UI with source freshness and provenance visible throughout
-- Explicit provider status and a strict no-scraping/no-passwords/no-OTP policy
+## ✨ Features
 
-## Preview
+### Portfolio Intelligence
 
-Open `index.html` directly in a browser, or use the local server below.
+- **0–100 Portfolio Health Score**
+- Explainable score components with configurable weights
+- Asset allocation analysis
+- Portfolio concentration analysis
+- Diversification analysis
+- Risk-alignment analysis
+- Sector exposure analysis
+- Geographic exposure analysis
+- Fund look-through and overlap analysis
+- Cost and fee analysis
+- Liquidity analysis
+- Fixed-income quality analysis
 
-## Quick start
+### Portfolio Planning
 
-```bash
-git clone https://github.com/<your-github-username>/spectrum-portfolio-intelligence.git
-cd spectrum-portfolio-intelligence
-npm test
-npm run check
-npm start
-```
+- Investor profile and preference context
+- Transparent target-allocation generation
+- Portfolio allocation gap analysis
+- Interactive what-if scenarios
+- Contributions-only rebalancing
+- One-time illustrative target rebalancing
+- Rebalancing guidance based on portfolio gaps
 
-Then visit [http://localhost:4173](http://localhost:4173).
+### Portfolio Data
 
-## Tech stack
+- Normalized holding model
+- CSV portfolio import
+- Manual portfolio entry
+- Source-labelled holdings
+- Source/freshness awareness
+- Transaction reconstruction
+- Duplicate and repeated-position detection
+- Confidence-aware position analysis
 
-Vanilla HTML, CSS, and modern ES modules on the client; a zero-dependency Node HTTP API with local development persistence on the server; and Node’s built-in test runner. This keeps the scoring logic inspectable while creating a clean API boundary for a future database and provider-adapter service.
+### Engineering
 
-## Architecture
+- Modular analytics engine
+- Node.js HTTP API
+- Local development persistence
+- PostgreSQL production-target schema
+- Provider adapter architecture
+- Audit-event support
+- Automated tests
+- JavaScript syntax checks
+- GitHub Actions CI
 
-```text
-Browser UI (index.html + app.js)
-        │
-        ▼
-Local Node API (server.mjs)
-        │
-        ├── Local development portfolio store
-        ├── Audit-event trail
-        └── Deterministic analytics (analytics.js)
-```
+---
 
-| Area | Current implementation | Production direction |
-| --- | --- | --- |
-| Holdings | API-backed local development store + normalized demo records | PostgreSQL canonical model and database migrations |
-| Imports | Local CSV parsing, manual entry, browser-local persistence | Reconciled, provider-specific CSV/PDF import parsers |
-| Analytics | Deterministic client-side functions | Versioned service with source-data snapshots |
-| Connections | Intentionally not connected | Approved OAuth/token adapters only, encrypted at rest |
-| Recommendations | Explainable illustrative ideas | Compliance-reviewed portfolio-fit engine |
+## 🧠 Portfolio Health Engine
 
-See [architecture notes](docs/ARCHITECTURE.md) and the [provider support matrix](docs/PROVIDER_SUPPORT.md).
-
-## Portfolio Health formula
-
-The score is a weighted, configurable analytical indicator—not opaque AI judgement or personalized advice.
+Spectrum uses a deterministic weighted scoring model rather than an opaque AI-generated score.
 
 | Component | Weight |
 | --- | ---: |
-| Asset allocation | 18% |
+| Asset Allocation | 18% |
 | Concentration | 15% |
 | Diversification | 12% |
-| Risk alignment | 10% |
-| Correlation & look-through overlap | 10% |
-| Sector allocation | 9% |
-| Geographic allocation | 8% |
-| Cost efficiency | 7% |
-| Fixed-income quality | 6% |
+| Risk Alignment | 10% |
+| Correlation & Look-through Overlap | 10% |
+| Sector Allocation | 9% |
+| Geographic Allocation | 8% |
+| Cost Efficiency | 7% |
+| Fixed-income Quality | 6% |
 | Liquidity | 5% |
 
-Inputs missing, stale, estimated, or manually entered should lower confidence and be shown to the user. Details and current simplifications are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Safety, data, and compliance boundaries
-
-- No credentials, passwords, PINs, OTPs, TPINs, or trade authorizations are requested or stored.
-- No provider website scraping or automated login is used.
-- All provider rows accurately distinguish import/manual demo support from any future official integration.
-- Portfolio outputs are educational analytics. They should not be treated as a buy, sell, hold, or suitability recommendation.
-- Any production build needs licensed market/fund-holdings data, legal review, security controls, and jurisdiction-specific compliance review.
-
-## Test and quality checks
-
-```bash
-npm test       # analytics tests
-npm run check  # JavaScript syntax checks
-```
-
-Current coverage verifies score bounds, allocation arithmetic, and scenario totals. Expand test coverage alongside future import parsers, deduplication, transaction reconstruction, and adapter workflows.
-
-## Repository layout
+### Score Pipeline
 
 ```text
-.
-├── analytics.js                 # transparent scoring and simulation logic
-├── app.js                       # UI behavior
-├── server.mjs                   # local API and development persistence
-├── domain/                      # transaction reconstruction and deduplication rules
-├── providers/                   # approved-integration adapter contracts
-├── db/migrations/               # PostgreSQL production-target schema
-├── index.html / style.css        # responsive product interface
-├── tests/                        # Node built-in test runner tests
-├── docs/                         # architecture and provider boundaries
-├── .github/workflows/ci.yml      # GitHub Actions quality gate
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── LICENSE
-```
-
-## Resume-ready project description
-
-> Built Spectrum, an explainable portfolio-health and diversification intelligence prototype for Indian investors. Designed a responsive fintech dashboard, deterministic 0–100 scoring model, look-through overlap estimates, source/freshness disclosures, and interactive what-if allocation simulations using vanilla JavaScript and modular normalized data models.
-
-## Roadmap
-
-1. Add validated CSV parsers, reconciliation, transaction reconstruction, and a secure backend data model.
-2. Integrate only approved provider APIs/OAuth flows, with encrypted token storage and audit logs.
-3. License market and fund-holdings data; make every analytic traceable to a source snapshot.
-4. Add richer tests, accessibility audit, authentication, account export/deletion, and observability.
-5. Obtain compliance review before offering personalized, actionable recommendations.
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md) before opening a pull request or sharing a vulnerability.
+Portfolio Holdings
+       │
+       ▼
+Normalized Data Model
+       │
+       ▼
+Portfolio Analytics
+       │
+ ┌─────┼──────────────────────────┐
+ │     │          │               │
+ ▼     ▼          ▼               ▼
+Risk  Allocation  Concentration  Diversification
+ │     │          │               │
+ └─────┴──────────┴───────────────┘
+                    │
+                    ▼
+          Portfolio Health Score
+                    │
+                    ▼
+          Explainable Insights

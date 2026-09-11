@@ -33,7 +33,7 @@ npm run check
 npm start
 ```
 
-Then visit [http://localhost:4173](http://localhost:4173).
+For **local development only**, then visit [http://localhost:4173](http://localhost:4173). This address works only on the computer running `npm start`.
 
 ## Deployment
 

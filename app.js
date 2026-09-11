@@ -1,6 +1,7 @@
 import {holdings,providerMatrix,analyze,generateRebalancePlan,lookThroughSummary,parseHoldingsCsv,scenario,targetForProfile} from './analytics.js';
 
 const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const colors=['#187d5d','#244f83','#dca733','#bdc9c1'];
 let portfolio=JSON.parse(localStorage.getItem('spectrum-holdings')||'null')||holdings;
 let profile=JSON.parse(localStorage.getItem('spectrum-profile')||'null')||{riskProfile:'moderate',horizonYears:10,emergencyFund:'unknown',monthlyCapacity:0};
@@ -9,7 +10,8 @@ const api={
   get:()=>fetch('/api/portfolio').then(r=>r.ok?r.json():Promise.reject(new Error('API unavailable'))),
   create:holding=>fetch('/api/holdings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(holding)}).then(r=>r.ok?r.json():r.json().then(x=>Promise.reject(new Error(x.error)))),
   import:holdings=>fetch('/api/imports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({holdings})}).then(r=>r.ok?r.json():r.json().then(x=>Promise.reject(new Error(x.error)))),
-  profile:profile=>fetch('/api/profile',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(profile)}).then(r=>r.ok?r.json():r.json().then(x=>Promise.reject(new Error(x.error))))
+  profile:profile=>fetch('/api/profile',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(profile)}).then(r=>r.ok?r.json():r.json().then(x=>Promise.reject(new Error(x.error)))),
+  remove:id=>fetch(`/api/holdings/${encodeURIComponent(id)}`,{method:'DELETE'}).then(r=>r.ok?r.json():r.json().then(x=>Promise.reject(new Error(x.error))))
 };
 
 function render(){
@@ -21,8 +23,14 @@ function render(){
   document.querySelector('#components').innerHTML=data.components.map(x=>`<div class="component"><small>${x[0].toUpperCase()} · ${x[2]}%</small><b>${Math.round(x[1])}</b><progress value="${x[1]}" max="100"></progress></div>`).join('');
   document.querySelector('#overlapText').textContent=`Calculated direct-stock / fund overlap is ${data.overlap.toFixed(1)}% of current portfolio value. Full holdings are not available for every instrument, so this is an estimate.`;
   document.querySelector('#goldAllocation').textContent=(data.asset.find(x=>x.name==='Gold')?.pct||0).toFixed(1)+'%';
+  renderHoldings();
   renderExposure();
   renderRebalance();
+}
+
+function renderHoldings(){
+ document.querySelector('#holdingsTable').innerHTML=portfolio.map(item=>`<tr><td><div class="holding-name"><b>${esc(item.name)}</b><small>${esc(item.symbol||'—')} · ${esc(item.type||'Other')}</small></div></td><td>${esc(item.account)}</td><td>${esc(item.asset)}</td><td>${esc(item.source)}</td><td><b>${fmt(item.value)}</b></td><td><button class="remove-holding" data-remove-id="${esc(item.id)}">Remove</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No holdings yet. Add a holding or import a CSV to begin.</td></tr>';
+ document.querySelectorAll('[data-remove-id]').forEach(button=>button.onclick=async()=>{const id=button.dataset.removeId;if(!confirm('Remove this holding from the local portfolio?'))return;try{await api.remove(id)}catch{}save(portfolio.filter(item=>item.id!==id))});
 }
 
 function exposureList(items){return items.slice(0,5).map(item=>`<div class="exposure-item"><div><span>${item.name}</span><b>${item.pct.toFixed(1)}%</b></div><i style="width:${Math.min(100,item.pct)}%"></i></div>`).join('')||'<p class="fine">No classified exposure data available.</p>'}
@@ -53,6 +61,7 @@ const modal=document.querySelector('#modal'),form=document.querySelector('#holdi
 function openModal(importMode){document.querySelector('#modalTitle').textContent=importMode?'Import holdings CSV':'Add a holding';document.querySelector('#modalText').textContent=importMode?'Import a simple holdings CSV from any provider. Every imported record is marked with its source.':'Manual entry is always available. Data will be clearly labelled as user supplied.';form.classList.toggle('hidden',importMode);panel.classList.toggle('hidden',!importMode);message.textContent='';modal.classList.remove('hidden')}
 document.querySelectorAll('#importBtn,#importBtn2').forEach(button=>button.onclick=()=>openModal(true));
 document.querySelector('#addBtn').onclick=()=>openModal(false);
+document.querySelector('#addHoldingFromList').onclick=()=>openModal(false);
 document.querySelectorAll('.close').forEach(button=>button.onclick=()=>modal.classList.add('hidden'));
 form.onsubmit=async event=>{event.preventDefault();const values=Object.fromEntries(new FormData(form));const holding={name:values.name,symbol:'—',type:'Other',account:values.account||'Manual portfolio',source:'Manual entry',value:Number(values.value),asset:values.asset,sector:'Unclassified',geo:'India',issuer:values.name,fee:0,liquidity:'Not assessed',overlap:{}};try{const result=await api.create(holding);save([...portfolio,result.holding])}catch{save([...portfolio,{...holding,id:`manual-${Date.now()}`,updated:'Entered locally'}])}form.reset();modal.classList.add('hidden')};
 document.querySelector('#csvFile').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{const added=parseHoldingsCsv(await file.text());try{await api.import(added)}catch{}save([...portfolio,...added]);message.textContent=`Imported ${added.length} holding${added.length===1?'':'s'} locally.`;setTimeout(()=>modal.classList.add('hidden'),800)}catch(error){message.textContent=error.message}};

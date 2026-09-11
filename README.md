@@ -9,6 +9,7 @@
 
 - Explainable **0–100 Portfolio Health Score** with component weights and confidence cues
 - Unified holdings view across manual and local CSV imports, with source-labelled demo statement workflows
+- Holdings management with source account attribution and local remove actions
 - Concentration, asset allocation, sector, geography, fund-overlap, fee, liquidity, and fixed-income diagnostics
 - Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
 - Interactive what-if simulator for illustrative contribution scenarios

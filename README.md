@@ -19,7 +19,9 @@
 
 ## Preview
 
-Open `index.html` directly in a browser, or use the local server below.
+Public static preview: **[shashhwt31.github.io/spectrum-portfolio-intelligence](https://shashhwt31.github.io/spectrum-portfolio-intelligence/)**
+
+The GitHub Pages preview runs the client-side experience and stores manual entries/imports in that browser. The local Node API and its JSON development store are intentionally not deployed to GitHub Pages.
 
 ## Quick start
 
@@ -32,6 +34,12 @@ npm start
 ```
 
 Then visit [http://localhost:4173](http://localhost:4173).
+
+## Deployment
+
+Pushing to `main` triggers `.github/workflows/deploy-pages.yml`, which publishes the static client to GitHub Pages. In GitHub, open **Settings → Pages** and select **GitHub Actions** as the build and deployment source if it is not already enabled. The first deployment appears at the public preview URL above after the workflow completes.
+
+For the complete local development experience—including the local Node API—run `npm start` instead.
 
 ## Tech stack
 

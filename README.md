@@ -10,6 +10,7 @@
 - Explainable **0–100 Portfolio Health Score** with component weights and confidence cues
 - Unified holdings view across manual and local CSV imports, with source-labelled demo statement workflows
 - Holdings management with source account attribution and local remove actions
+- Fund-name autocomplete for curated, real scheme identifiers (for example, UTI Nifty schemes)
 - Concentration, asset allocation, sector, geography, fund-overlap, fee, liquidity, and fixed-income diagnostics
 - Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
 - Interactive what-if simulator for illustrative contribution scenarios
@@ -91,6 +92,10 @@ Inputs missing, stale, estimated, or manually entered should lower confidence an
 - All provider rows accurately distinguish import/manual demo support from any future official integration.
 - Portfolio outputs are educational analytics. They should not be treated as a buy, sell, hold, or suitability recommendation.
 - Any production build needs licensed market/fund-holdings data, legal review, security controls, and jurisdiction-specific compliance review.
+
+### Fund search catalogue
+
+The add-holding search is a small curated identifier catalogue for quicker manual entry. It is **not** a live fund master, NAV feed, availability check, recommendation, or investment advice. Scheme names are based on public AMFI/AMC disclosures and should be refreshed from an approved data source before production use.
 
 ## Test and quality checks
 

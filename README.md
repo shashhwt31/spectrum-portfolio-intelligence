@@ -15,6 +15,7 @@
 - Portfolio-fit recommendation cards that explain the gap addressed and trade-offs
 - Interactive what-if simulator for illustrative contribution scenarios
 - Investor-context form that adjusts transparent analytical target allocations
+- Device-local demo sign-in/profile flow with display name, optional email, goal, and clear-data sign-out
 - Responsive, accessibility-conscious fintech UI with source freshness and provenance visible throughout
 - Explicit provider status and a strict no-scraping/no-passwords/no-OTP policy
 
@@ -88,6 +89,7 @@ Inputs missing, stale, estimated, or manually entered should lower confidence an
 ## Safety, data, and compliance boundaries
 
 - No credentials, passwords, PINs, OTPs, TPINs, or trade authorizations are requested or stored.
+- The deployed sign-in is a browser-local demo profile, not authentication. It must not be used for production access control.
 - No provider website scraping or automated login is used.
 - All provider rows accurately distinguish import/manual demo support from any future official integration.
 - Portfolio outputs are educational analytics. They should not be treated as a buy, sell, hold, or suitability recommendation.

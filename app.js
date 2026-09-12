@@ -5,7 +5,8 @@ const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
 const esc=value=>String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 const colors=['#187d5d','#244f83','#dca733','#bdc9c1'];
 let portfolio=JSON.parse(localStorage.getItem('spectrum-holdings')||'null')||holdings;
-let profile=JSON.parse(localStorage.getItem('spectrum-profile')||'null')||{riskProfile:'moderate',horizonYears:10,emergencyFund:'unknown',monthlyCapacity:0};
+let profile=JSON.parse(localStorage.getItem('spectrum-profile')||'null')||{riskProfile:'moderate',horizonYears:10,emergencyFund:'unknown',monthlyCapacity:0,goal:''};
+let user=JSON.parse(localStorage.getItem('spectrum-user')||'null');
 let data, target='intl', rebalanceMode='contributions';
 const api={
   get:()=>fetch('/api/portfolio').then(r=>r.ok?r.json():Promise.reject(new Error('API unavailable'))),
@@ -24,9 +25,16 @@ function render(){
   document.querySelector('#components').innerHTML=data.components.map(x=>`<div class="component"><small>${x[0].toUpperCase()} · ${x[2]}%</small><b>${Math.round(x[1])}</b><progress value="${x[1]}" max="100"></progress></div>`).join('');
   document.querySelector('#overlapText').textContent=`Calculated direct-stock / fund overlap is ${data.overlap.toFixed(1)}% of current portfolio value. Full holdings are not available for every instrument, so this is an estimate.`;
   document.querySelector('#goldAllocation').textContent=(data.asset.find(x=>x.name==='Gold')?.pct||0).toFixed(1)+'%';
+  renderIdentity();
   renderHoldings();
   renderExposure();
   renderRebalance();
+}
+
+function renderIdentity(){
+ const initials=(user?.displayName||'SP').split(/\s+/).map(word=>word[0]).join('').slice(0,2).toUpperCase();
+ document.querySelector('#authTrigger').textContent=initials;
+ document.querySelector('#greeting').textContent=user?.displayName?`Good morning, ${user.displayName.split(' ')[0]}.`:'Good morning.';
 }
 
 function renderHoldings(){
@@ -74,3 +82,9 @@ const profileForm=document.querySelector('#profileForm'),profileMessage=document
 function hydrateProfile(){for(const [key,value] of Object.entries(profile)){if(profileForm.elements[key])profileForm.elements[key].value=value}}
 hydrateProfile();
 profileForm.onsubmit=async event=>{event.preventDefault();const next=Object.fromEntries(new FormData(profileForm));next.horizonYears=Number(next.horizonYears)||0;next.monthlyCapacity=Number(next.monthlyCapacity)||0;try{const result=await api.profile(next);profile=result.profile}catch{profile=next}localStorage.setItem('spectrum-profile',JSON.stringify(profile));render();profileMessage.textContent='Planning context updated locally.'};
+const authModal=document.querySelector('#authModal'),authForm=document.querySelector('#authForm'),authTitle=document.querySelector('#authTitle'),signOut=document.querySelector('#signOut');
+function openAuth(){authForm.elements.displayName.value=user?.displayName||'';authForm.elements.email.value=user?.email||'';authTitle.textContent=user?'Profile on this device':'Sign in on this device';signOut.classList.toggle('hidden',!user);authModal.classList.remove('hidden')}
+document.querySelector('#authTrigger').onclick=openAuth;
+document.querySelector('.close-auth').onclick=()=>authModal.classList.add('hidden');
+authForm.onsubmit=event=>{event.preventDefault();const values=Object.fromEntries(new FormData(authForm));user={displayName:values.displayName.trim(),email:values.email.trim()};localStorage.setItem('spectrum-user',JSON.stringify(user));renderIdentity();authModal.classList.add('hidden')};
+signOut.onclick=()=>{if(!confirm('Clear this local profile, holdings, and planning context from this browser?'))return;localStorage.removeItem('spectrum-user');localStorage.removeItem('spectrum-profile');localStorage.removeItem('spectrum-holdings');user=null;profile={riskProfile:'moderate',horizonYears:10,emergencyFund:'unknown',monthlyCapacity:0,goal:''};portfolio=holdings;hydrateProfile();save(portfolio);authModal.classList.add('hidden')};
